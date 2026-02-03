@@ -1,5 +1,5 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { colors } from '../../theme';
 
 import SettingsListScreen from '../../screens/settings/SettingsListScreen';
@@ -18,7 +18,7 @@ type SettingsStackParamList = {
   KnowledgeBase: undefined;
 };
 
-const Stack = createNativeStackNavigator<SettingsStackParamList>();
+const Stack = createStackNavigator<SettingsStackParamList>();
 
 export default function SettingsStackNavigator() {
   return (

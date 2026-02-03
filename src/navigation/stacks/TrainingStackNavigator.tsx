@@ -1,5 +1,5 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { TrainingStackParamList } from '../../types';
 import { colors } from '../../theme';
 
@@ -8,7 +8,7 @@ import WorkoutDetailScreen from '../../screens/workouts/WorkoutDetailScreen';
 import WorkoutTimerScreen from '../../screens/workouts/WorkoutTimerScreen';
 import IntervalTimerScreen from '../../screens/workouts/IntervalTimerScreen';
 
-const Stack = createNativeStackNavigator<TrainingStackParamList>();
+const Stack = createStackNavigator<TrainingStackParamList>();
 
 export default function TrainingStackNavigator() {
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { ProgressStackParamList } from '../../types';
 import { colors } from '../../theme';
 
@@ -7,7 +7,7 @@ import ProgressDashboardScreen from '../../screens/progress/ProgressDashboardScr
 import WeightHistoryScreen from '../../screens/progress/WeightHistoryScreen';
 import MeasurementsScreen from '../../screens/progress/MeasurementsScreen';
 
-const Stack = createNativeStackNavigator<ProgressStackParamList>();
+const Stack = createStackNavigator<ProgressStackParamList>();
 
 export default function ProgressStackNavigator() {
   return (

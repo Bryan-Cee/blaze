@@ -1,12 +1,12 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { HomeStackParamList } from '../../types';
 import { colors } from '../../theme';
 
 import DashboardScreen from '../../screens/home/DashboardScreen';
 import WorkoutDetailScreen from '../../screens/workouts/WorkoutDetailScreen';
 
-const Stack = createNativeStackNavigator<HomeStackParamList>();
+const Stack = createStackNavigator<HomeStackParamList>();
 
 export default function HomeStackNavigator() {
   return (
