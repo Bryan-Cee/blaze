@@ -7,12 +7,14 @@ import { v4 as uuidv4 } from 'uuid';
 interface UserState {
   profile: UserProfile | null;
   reminders: ReminderSetting[];
+  _hasHydrated: boolean;
 
   // Actions
   setProfile: (profile: Partial<UserProfile>) => void;
   completeOnboarding: (data: Omit<UserProfile, 'id' | 'onboardingCompleted'>) => void;
   updateReminder: (reminder: ReminderSetting) => void;
   resetProfile: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 const defaultReminders: ReminderSetting[] = [
@@ -27,6 +29,7 @@ export const useUserStore = create<UserState>()(
     (set) => ({
       profile: null,
       reminders: defaultReminders,
+      _hasHydrated: false,
 
       setProfile: (profileData) =>
         set((state) => ({
@@ -56,10 +59,21 @@ export const useUserStore = create<UserState>()(
           profile: null,
           reminders: defaultReminders,
         }),
+
+      setHasHydrated: (state) => {
+        set({ _hasHydrated: state });
+      },
     }),
     {
       name: 'blaze-user-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+      partialize: (state) => ({
+        profile: state.profile,
+        reminders: state.reminders,
+      }),
     }
   )
 );
