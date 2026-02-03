@@ -1,0 +1,65 @@
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { UserProfile, ReminderSetting } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+
+interface UserState {
+  profile: UserProfile | null;
+  reminders: ReminderSetting[];
+
+  // Actions
+  setProfile: (profile: Partial<UserProfile>) => void;
+  completeOnboarding: (data: Omit<UserProfile, 'id' | 'onboardingCompleted'>) => void;
+  updateReminder: (reminder: ReminderSetting) => void;
+  resetProfile: () => void;
+}
+
+const defaultReminders: ReminderSetting[] = [
+  { type: 'workout', enabled: true, time: '06:45', frequency: 'daily' },
+  { type: 'hydration', enabled: true, frequency: 'daily' },
+  { type: 'mealPrep', enabled: true, time: '17:00', frequency: 'weekly' },
+  { type: 'checkIn', enabled: true, time: '07:30', frequency: 'weekly' },
+];
+
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      profile: null,
+      reminders: defaultReminders,
+
+      setProfile: (profileData) =>
+        set((state) => ({
+          profile: state.profile
+            ? { ...state.profile, ...profileData }
+            : null,
+        })),
+
+      completeOnboarding: (data) =>
+        set({
+          profile: {
+            id: uuidv4(),
+            ...data,
+            onboardingCompleted: true,
+          },
+        }),
+
+      updateReminder: (reminder) =>
+        set((state) => ({
+          reminders: state.reminders.map((r) =>
+            r.type === reminder.type ? reminder : r
+          ),
+        })),
+
+      resetProfile: () =>
+        set({
+          profile: null,
+          reminders: defaultReminders,
+        }),
+    }),
+    {
+      name: 'blaze-user-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
