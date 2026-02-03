@@ -1,5 +1,5 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { colors } from '../../theme';
 
 import NutritionDashboardScreen from '../../screens/nutrition/NutritionDashboardScreen';
@@ -14,7 +14,7 @@ type NutritionStackParamList = {
   Hydration: undefined;
 };
 
-const Stack = createNativeStackNavigator<NutritionStackParamList>();
+const Stack = createStackNavigator<NutritionStackParamList>();
 
 export default function NutritionStackNavigator() {
   return (
