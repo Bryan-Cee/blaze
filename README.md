@@ -10,9 +10,9 @@ An 8-week fat loss companion app built with React Native and Expo. Blaze helps y
 ## Features
 
 ### Dashboard
-- Daily overview with weight progress tracking
+- Daily overview with weight progress ring and start/current/goal metrics
 - Today's workout card with quick access
-- Hydration tracker with quick-add buttons (250ml, 500ml, 750ml)
+- Hydration tracker with quick-add buttons (250ml, 500ml, 750ml) and undo
 - Calories and macro summary
 
 ### Training
@@ -44,6 +44,7 @@ An 8-week fat loss companion app built with React Native and Expo. Blaze helps y
 - Weight tracking with visual charts
 - Expected vs actual weight trajectory
 - Body measurements (waist, hip, chest)
+- Progress photo capture and gallery
 - Weekly summary with adherence stats
 
 ### Knowledge Base
@@ -51,19 +52,32 @@ An 8-week fat loss companion app built with React Native and Expo. Blaze helps y
 - Tips for habit stacking, nutrition, and recovery
 - FAQ for common questions (plateaus, alcohol, cheat meals)
 
+### Notifications
+- Local push notifications via `expo-notifications`
+- Workout reminders (Mon–Fri at 6:45 AM)
+- Hydration reminders (every 90 min, 8 AM – 6:30 PM)
+- Meal prep reminders (Sunday 5 PM, Wednesday 6 PM)
+- Weekly check-in reminder (Monday 7:30 AM)
+- Toggle individual reminder types on/off
+- Graceful fallback in Expo Go (notifications require a development build)
+
 ### Settings
 - Profile and goal customization
-- Reminder preferences (workouts, hydration, meal prep, check-ins)
+- Reminder preferences with live notification scheduling
 - Data export (JSON/CSV)
+- Full data reset across all stores
 
 ## Tech Stack
 
-- **Framework:** React Native with Expo
+- **Framework:** React Native 0.81 with Expo SDK 54
 - **Language:** TypeScript
 - **State Management:** Zustand with AsyncStorage persistence
 - **Navigation:** React Navigation (bottom tabs + stack navigators)
+- **Notifications:** expo-notifications (local scheduling)
 - **Charts:** React Native Chart Kit
 - **Forms:** React Hook Form
+- **Icons:** Ionicons via @expo/vector-icons
+- **Date Utilities:** date-fns
 - **Styling:** Strava-inspired dark theme
 
 ## Design
@@ -142,6 +156,8 @@ src/
 │   ├── progress/
 │   ├── settings/
 │   └── workouts/
+├── services/            # Background services
+│   └── notificationService.ts
 ├── store/               # Zustand stores
 │   ├── hydrationStore.ts
 │   ├── nutritionStore.ts
@@ -155,6 +171,11 @@ src/
 └── types/               # TypeScript interfaces
     └── index.ts
 ```
+
+## Notes
+
+- **Notifications** require a [development build](https://docs.expo.dev/develop/development-builds/introduction/) to function. In Expo Go, the notification service degrades gracefully (no crashes, but no notifications).
+- **Progress photos** use `expo-image-picker` and require camera/photo library permissions.
 
 ## Data Privacy
 
