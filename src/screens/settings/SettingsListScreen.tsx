@@ -9,9 +9,16 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useUserStore } from '../../store';
+import {
+  useUserStore,
+  useWorkoutStore,
+  useHydrationStore,
+  useNutritionStore,
+  useProgressStore,
+} from '../../store';
 import { Card } from '../../components/common';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { syncReminders } from '../../services/notificationService';
 type SettingsStackParamList = {
   SettingsList: undefined;
   Profile: undefined;
@@ -37,6 +44,10 @@ export default function SettingsListScreen() {
   const navigation = useNavigation<NavigationProp>();
   const profile = useUserStore((state) => state.profile);
   const resetProfile = useUserStore((state) => state.resetProfile);
+  const resetWorkouts = useWorkoutStore((state) => state.reset);
+  const resetHydration = useHydrationStore((state) => state.reset);
+  const resetNutrition = useNutritionStore((state) => state.reset);
+  const resetProgress = useProgressStore((state) => state.reset);
 
   const handleReset = () => {
     Alert.alert(
@@ -47,7 +58,14 @@ export default function SettingsListScreen() {
         {
           text: 'Reset',
           style: 'destructive',
-          onPress: () => resetProfile(),
+          onPress: () => {
+            resetWorkouts();
+            resetHydration();
+            resetNutrition();
+            resetProgress();
+            syncReminders([]);
+            resetProfile();
+          },
         },
       ]
     );

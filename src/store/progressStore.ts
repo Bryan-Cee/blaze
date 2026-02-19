@@ -31,6 +31,7 @@ interface ProgressState {
   logBiofeedback: (log: Omit<BiofeedbackLog, 'id'>) => void;
   getTodayBiofeedback: () => BiofeedbackLog | undefined;
   getBiofeedbackHistory: (days: number) => BiofeedbackLog[];
+  reset: () => void;
 }
 
 export const useProgressStore = create<ProgressState>()(
@@ -155,6 +156,9 @@ export const useProgressStore = create<ProgressState>()(
         const startStr = format(startDate, 'yyyy-MM-dd');
         return get().biofeedbackLogs.filter((log) => log.date >= startStr);
       },
+
+      reset: () =>
+        set({ weightLogs: [], measurements: [], biofeedbackLogs: [], progressPhotos: [] }),
     }),
     {
       name: 'blaze-progress-storage',

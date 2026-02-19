@@ -15,6 +15,7 @@ interface HydrationState {
   getTotalForDate: (date: string) => number;
   getStreak: (targetMl: number) => number;
   getHistory: (days: number) => { date: string; totalMl: number }[];
+  reset: () => void;
 }
 
 export const useHydrationStore = create<HydrationState>()(
@@ -109,6 +110,8 @@ export const useHydrationStore = create<HydrationState>()(
 
         return result;
       },
+
+      reset: () => set({ entries: [] }),
     }),
     {
       name: 'blaze-hydration-storage',

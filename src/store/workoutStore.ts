@@ -15,6 +15,7 @@ interface WorkoutState {
   getLogByDate: (date: string) => WorkoutLog | undefined;
   getLogsForWeek: (date: Date) => WorkoutLog[];
   getCompletedCount: () => number;
+  reset: () => void;
 }
 
 export const useWorkoutStore = create<WorkoutState>()(
@@ -61,6 +62,8 @@ export const useWorkoutStore = create<WorkoutState>()(
       getCompletedCount: () => {
         return get().logs.filter((log) => log.completed).length;
       },
+
+      reset: () => set({ logs: [] }),
     }),
     {
       name: 'blaze-workout-storage',
