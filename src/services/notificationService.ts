@@ -6,24 +6,29 @@ import { ReminderSetting } from '../types';
 /**
  * Call once at app start. Sets the foreground notification handler
  * and creates the Android notification channel.
+ * Silently no-ops in Expo Go where notifications aren't supported.
  */
 export function initializeNotifications() {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
-
-  if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('reminders', {
-      name: 'Reminders',
-      importance: Notifications.AndroidImportance.HIGH,
-      sound: 'default',
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
     });
+
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('reminders', {
+        name: 'Reminders',
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: 'default',
+      });
+    }
+  } catch {
+    // expo-notifications not available (e.g. Expo Go)
   }
 }
 
@@ -32,16 +37,19 @@ export function initializeNotifications() {
  * where push tokens aren't available.
  */
 export async function requestPermissions(): Promise<boolean> {
-  if (!Device.isDevice) {
-    console.log('Notifications: skipping permission request on simulator');
+  try {
+    if (!Device.isDevice) {
+      return false;
+    }
+
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing === 'granted') return true;
+
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
+  } catch {
     return false;
   }
-
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
-
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === 'granted';
 }
 
 // ── Notification content per reminder type ──────────────────────────
@@ -135,38 +143,43 @@ function triggersForType(type: ReminderSetting['type']): WeeklyTrigger[] {
 /**
  * Cancel all existing notifications and reschedule based on the
  * current set of enabled reminders.
+ * Silently no-ops in Expo Go where notifications aren't supported.
  */
 export async function syncReminders(reminders: ReminderSetting[]) {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
 
-  const enabled = reminders.filter((r) => r.enabled);
+    const enabled = reminders.filter((r) => r.enabled);
 
-  for (const reminder of enabled) {
-    const content = CONTENT[reminder.type];
-    const triggers = triggersForType(reminder.type);
+    for (const reminder of enabled) {
+      const content = CONTENT[reminder.type];
+      const triggers = triggersForType(reminder.type);
 
-    for (const trigger of triggers) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: content.title,
-          body: content.body,
-          sound: 'default',
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-          weekday: trigger.weekday,
-          hour: trigger.hour,
-          minute: trigger.minute,
-        },
-      });
+      for (const trigger of triggers) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: content.title,
+            body: content.body,
+            sound: 'default',
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+            weekday: trigger.weekday,
+            hour: trigger.hour,
+            minute: trigger.minute,
+          },
+        });
+      }
     }
-  }
 
-  if (__DEV__) {
-    const scheduled =
-      await Notifications.getAllScheduledNotificationsAsync();
-    console.log(
-      `Notifications: synced ${scheduled.length} scheduled notifications`
-    );
+    if (__DEV__) {
+      const scheduled =
+        await Notifications.getAllScheduledNotificationsAsync();
+      console.log(
+        `Notifications: synced ${scheduled.length} scheduled notifications`
+      );
+    }
+  } catch {
+    // expo-notifications not available (e.g. Expo Go)
   }
 }

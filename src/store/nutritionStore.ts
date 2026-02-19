@@ -25,6 +25,8 @@ interface NutritionState {
   toggleGroceryItem: (id: string) => void;
   resetGroceryList: () => void;
   setGroceryItems: (items: GroceryItem[]) => void;
+
+  reset: () => void;
 }
 
 export const useNutritionStore = create<NutritionState>()(
@@ -94,6 +96,8 @@ export const useNutritionStore = create<NutritionState>()(
         })),
 
       setGroceryItems: (items) => set({ groceryItems: items }),
+
+      reset: () => set({ logs: [], mealPrepItems: [], groceryItems: [] }),
     }),
     {
       name: 'blaze-nutrition-storage',
