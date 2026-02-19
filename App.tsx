@@ -1,12 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
 import { AppNavigator } from './src/navigation';
 import { useUserStore } from './src/store';
 import { colors } from './src/theme';
+import {
+  initializeNotifications,
+  requestPermissions,
+  syncReminders,
+} from './src/services/notificationService';
 
 function AppContent() {
   const hasHydrated = useUserStore((state) => state._hasHydrated);
+  const reminders = useUserStore((state) => state.reminders);
+
+  useEffect(() => {
+    initializeNotifications();
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    requestPermissions().then(() => syncReminders(reminders));
+  }, [hasHydrated]);
 
   if (!hasHydrated) {
     return (
