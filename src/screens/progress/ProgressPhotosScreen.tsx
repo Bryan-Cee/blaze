@@ -9,8 +9,8 @@ import {
   Modal,
   Alert,
   Dimensions,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { format, parseISO } from 'date-fns';
 import { useProgressStore } from '../../store';

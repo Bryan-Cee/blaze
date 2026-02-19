@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { useUserStore } from '../../store';
 import { Button, Input, Card } from '../../components/common';

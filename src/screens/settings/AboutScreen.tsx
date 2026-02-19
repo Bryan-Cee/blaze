@@ -103,7 +103,7 @@ export default function AboutScreen() {
           Made with 🔥 for the 8-week journey
         </Text>
         <Text style={styles.footerSubtext}>
-          © 2024 Blaze App
+          © 2026 Blaze App
         </Text>
       </View>
     </ScrollView>

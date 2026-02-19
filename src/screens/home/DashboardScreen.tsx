@@ -4,9 +4,9 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { format, getDay } from "date-fns";
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.md,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.xl,
   },
   header: {
     flexDirection: "row",

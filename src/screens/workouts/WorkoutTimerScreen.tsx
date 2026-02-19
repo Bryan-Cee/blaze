@@ -4,8 +4,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Button } from '../../components/common';
 import { colors, spacing, typography, borderRadius } from '../../theme';
