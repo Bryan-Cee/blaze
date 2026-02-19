@@ -31,12 +31,18 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Configure EAS project
+        run: eas init --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
       - name: Build Android APK
         run: |
           eas build --platform android --profile production \
             --non-interactive --no-wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_BUILD_NO_EXPO_GO_WARNING: true
 
       - name: Wait for build to complete and download APK
         id: download
