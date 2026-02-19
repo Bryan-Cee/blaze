@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HydrationEntry } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { format, parseISO, differenceInDays } from 'date-fns';
 
 interface HydrationState {
@@ -29,7 +29,7 @@ export const useHydrationStore = create<HydrationState>()(
           entries: [
             ...state.entries,
             {
-              id: uuidv4(),
+              id: Crypto.randomUUID(),
               date: entryDate,
               quantityMl,
               timestamp: now.toISOString(),

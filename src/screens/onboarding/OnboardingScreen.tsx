@@ -72,7 +72,7 @@ export default function OnboardingScreen() {
       if (step < 2) {
         setStep(step + 1);
       } else {
-        handleSubmit(onSubmit)();
+        onSubmit(getValues());
       }
     }
   };
@@ -344,8 +344,8 @@ export default function OnboardingScreen() {
               title={step === 2 ? "Let's Go!" : 'Continue'}
               variant="primary"
               onPress={handleNext}
-              fullWidth={step === 0}
-              style={step > 0 ? styles.nextButton : undefined}
+              fullWidth={step === 0 || step === 2}
+              style={step === 1 ? styles.nextButton : undefined}
             />
           </View>
         </ScrollView>

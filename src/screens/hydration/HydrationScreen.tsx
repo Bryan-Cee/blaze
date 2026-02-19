@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,15 +14,58 @@ import { colors, spacing, typography, borderRadius } from '../../theme';
 
 export default function HydrationScreen() {
   const profile = useUserStore((state) => state.profile);
-  const todayHydration = useHydrationStore((state) => state.getTodayTotal());
+  const hydrationEntries = useHydrationStore((state) => state.entries);
   const addHydration = useHydrationStore((state) => state.addEntry);
-  const hydrationHistory = useHydrationStore((state) => state.getHistory(7));
-  const hydrationStreak = useHydrationStore((state) =>
-    state.getStreak(profile?.hydrationTargetMl || 3000)
-  );
-
-  const todayBiofeedback = useProgressStore((state) => state.getTodayBiofeedback());
+  const biofeedbackLogs = useProgressStore((state) => state.biofeedbackLogs);
   const logBiofeedback = useProgressStore((state) => state.logBiofeedback);
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayHydration = useMemo(
+    () => hydrationEntries
+      .filter((entry) => entry.date === todayStr)
+      .reduce((sum, entry) => sum + entry.quantityMl, 0),
+    [hydrationEntries, todayStr]
+  );
+  const hydrationHistory = useMemo(() => {
+    const result: { date: string; totalMl: number }[] = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = format(checkDate, 'yyyy-MM-dd');
+      const total = hydrationEntries
+        .filter((entry) => entry.date === dateStr)
+        .reduce((sum, entry) => sum + entry.quantityMl, 0);
+      result.push({ date: dateStr, totalMl: total });
+    }
+    return result;
+  }, [hydrationEntries]);
+  const hydrationStreak = useMemo(() => {
+    const targetMl = profile?.hydrationTargetMl || 3000;
+    const dailyTotals = new Map<string, number>();
+    hydrationEntries.forEach((entry) => {
+      const current = dailyTotals.get(entry.date) || 0;
+      dailyTotals.set(entry.date, current + entry.quantityMl);
+    });
+    const today = new Date();
+    let streak = 0;
+    for (let i = 1; i <= 365; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = format(checkDate, 'yyyy-MM-dd');
+      if ((dailyTotals.get(dateStr) || 0) >= targetMl) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    if ((dailyTotals.get(todayStr) || 0) >= targetMl) streak++;
+    return streak;
+  }, [hydrationEntries, profile?.hydrationTargetMl, todayStr]);
+  const todayBiofeedback = useMemo(
+    () => biofeedbackLogs.find((log) => log.date === todayStr),
+    [biofeedbackLogs, todayStr]
+  );
 
   const [energy, setEnergy] = useState(todayBiofeedback?.energy || 3);
   const [hunger, setHunger] = useState(todayBiofeedback?.hunger || 3);

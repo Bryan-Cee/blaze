@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,9 +21,9 @@ type NavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 export default function DashboardScreen() {
   const navigation = useNavigation<NavigationProp>();
   const profile = useUserStore((state) => state.profile);
-  const todayHydration = useHydrationStore((state) => state.getTodayTotal());
+  const hydrationEntries = useHydrationStore((state) => state.entries);
   const addHydration = useHydrationStore((state) => state.addEntry);
-  const latestWeight = useProgressStore((state) => state.getLatestWeight());
+  const weightLogs = useProgressStore((state) => state.weightLogs);
   const workoutLogs = useWorkoutStore((state) => state.logs);
 
   const today = new Date();
@@ -33,6 +33,18 @@ export default function DashboardScreen() {
   const todayWorkoutLog = workoutLogs.find(
     (log) => log.date === todayDate && log.sessionId === todayWorkout?.id
   );
+
+  const todayHydration = useMemo(
+    () => hydrationEntries
+      .filter((entry) => entry.date === todayDate)
+      .reduce((sum, entry) => sum + entry.quantityMl, 0),
+    [hydrationEntries, todayDate]
+  );
+  const latestWeight = useMemo(() => {
+    if (weightLogs.length === 0) return null;
+    const sorted = [...weightLogs].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted[0].weightKg;
+  }, [weightLogs]);
 
   const hydrationTarget = profile?.hydrationTargetMl || 3000;
   const hydrationProgress = todayHydration / hydrationTarget;

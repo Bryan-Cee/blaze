@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,11 @@ import { Card, Button, Input } from '../../components/common';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 export default function MeasurementsScreen() {
-  const measurements = useProgressStore((state) => state.getMeasurementHistory());
+  const rawMeasurements = useProgressStore((state) => state.measurements);
+  const measurements = useMemo(
+    () => [...rawMeasurements].sort((a, b) => a.date.localeCompare(b.date)),
+    [rawMeasurements]
+  );
   const logMeasurement = useProgressStore((state) => state.logMeasurement);
 
   const [showForm, setShowForm] = useState(false);

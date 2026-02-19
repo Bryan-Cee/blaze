@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,11 +23,34 @@ const screenWidth = Dimensions.get('window').width;
 export default function ProgressDashboardScreen() {
   const navigation = useNavigation<NavigationProp>();
   const profile = useUserStore((state) => state.profile);
-  const weightHistory = useProgressStore((state) => state.getWeightHistory());
-  const latestWeight = useProgressStore((state) => state.getLatestWeight());
+  const weightLogs = useProgressStore((state) => state.weightLogs);
   const logWeight = useProgressStore((state) => state.logWeight);
   const workoutLogs = useWorkoutStore((state) => state.logs);
-  const hydrationHistory = useHydrationStore((state) => state.getHistory(7));
+  const hydrationEntries = useHydrationStore((state) => state.entries);
+
+  const weightHistory = useMemo(
+    () => [...weightLogs].sort((a, b) => a.date.localeCompare(b.date)),
+    [weightLogs]
+  );
+  const latestWeight = useMemo(() => {
+    if (weightLogs.length === 0) return null;
+    const sorted = [...weightLogs].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted[0].weightKg;
+  }, [weightLogs]);
+  const hydrationHistory = useMemo(() => {
+    const result: { date: string; totalMl: number }[] = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = format(checkDate, 'yyyy-MM-dd');
+      const total = hydrationEntries
+        .filter((entry) => entry.date === dateStr)
+        .reduce((sum, entry) => sum + entry.quantityMl, 0);
+      result.push({ date: dateStr, totalMl: total });
+    }
+    return result;
+  }, [hydrationEntries]);
 
   const [showWeightInput, setShowWeightInput] = React.useState(false);
   const [newWeight, setNewWeight] = React.useState('');
@@ -264,7 +287,10 @@ export default function ProgressDashboardScreen() {
           <Text style={styles.actionIcon}>📏</Text>
           <Text style={styles.actionText}>Log Measurements</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('ProgressPhotos')}
+        >
           <Text style={styles.actionIcon}>📸</Text>
           <Text style={styles.actionText}>Progress Photo</Text>
         </TouchableOpacity>

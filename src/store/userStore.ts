@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProfile, ReminderSetting } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 
 interface UserState {
   profile: UserProfile | null;
@@ -41,7 +41,7 @@ export const useUserStore = create<UserState>()(
       completeOnboarding: (data) =>
         set({
           profile: {
-            id: uuidv4(),
+            id: Crypto.randomUUID(),
             ...data,
             onboardingCompleted: true,
           },
