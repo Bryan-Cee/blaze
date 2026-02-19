@@ -34,13 +34,13 @@ jobs:
         run: |
           BUILD_URL="${{ github.event.client_payload.buildUrl }}"
           echo "Downloading APK from: $BUILD_URL"
-          wget -O blaze.apk "$BUILD_URL"
+          wget -O blaze-v${{ steps.version.outputs.version }}.apk "$BUILD_URL"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          files: blaze.apk
+          files: blaze-v${{ steps.version.outputs.version }}.apk
           name: Blaze v${{ steps.version.outputs.version }}
           body: |
             ## Blaze v${{ steps.version.outputs.version }}
@@ -49,7 +49,7 @@ jobs:
             - Android APK build for version ${{ steps.version.outputs.version }}
 
             ### Installation
-            1. Download the `blaze.apk` file below
+            1. Download the `blaze-v${{ steps.version.outputs.version }}.apk` file below
             2. Enable "Install from Unknown Sources" on your device
             3. Install the APK
 
