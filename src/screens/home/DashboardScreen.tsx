@@ -23,6 +23,7 @@ export default function DashboardScreen() {
   const profile = useUserStore((state) => state.profile);
   const hydrationEntries = useHydrationStore((state) => state.entries);
   const addHydration = useHydrationStore((state) => state.addEntry);
+  const removeHydration = useHydrationStore((state) => state.removeEntry);
   const weightLogs = useProgressStore((state) => state.weightLogs);
   const workoutLogs = useWorkoutStore((state) => state.logs);
 
@@ -34,11 +35,13 @@ export default function DashboardScreen() {
     (log) => log.date === todayDate && log.sessionId === todayWorkout?.id
   );
 
-  const todayHydration = useMemo(
-    () => hydrationEntries
-      .filter((entry) => entry.date === todayDate)
-      .reduce((sum, entry) => sum + entry.quantityMl, 0),
+  const todayEntries = useMemo(
+    () => hydrationEntries.filter((entry) => entry.date === todayDate),
     [hydrationEntries, todayDate]
+  );
+  const todayHydration = useMemo(
+    () => todayEntries.reduce((sum, entry) => sum + entry.quantityMl, 0),
+    [todayEntries]
   );
   const latestWeight = useMemo(() => {
     if (weightLogs.length === 0) return null;
@@ -57,6 +60,12 @@ export default function DashboardScreen() {
 
   const quickAddWater = (ml: number) => {
     addHydration(ml);
+  };
+
+  const undoLastEntry = () => {
+    if (todayEntries.length === 0) return;
+    const last = todayEntries[todayEntries.length - 1];
+    removeHydration(last.id);
   };
 
   return (
@@ -203,6 +212,14 @@ export default function DashboardScreen() {
             >
               <Text style={styles.quickAddText}>+750ml</Text>
             </TouchableOpacity>
+            {todayEntries.length > 0 && (
+              <TouchableOpacity
+                style={styles.undoButton}
+                onPress={undoLastEntry}
+              >
+                <Text style={styles.undoText}>Undo</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </Card>
 
@@ -392,6 +409,19 @@ const styles = StyleSheet.create({
   quickAddText: {
     ...typography.buttonSmall,
     color: colors.water,
+  },
+  undoButton: {
+    backgroundColor: colors.backgroundTertiary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  undoText: {
+    ...typography.buttonSmall,
+    color: colors.textTertiary,
   },
   statsRow: {
     flexDirection: 'row',
