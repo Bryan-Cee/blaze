@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     permissions:
       contents: write  # Required to create releases and upload assets
 
@@ -39,54 +40,19 @@ jobs:
       - name: Build Android APK
         run: |
           eas build --platform android --profile production \
-            --non-interactive --no-wait
+            --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_BUILD_NO_EXPO_GO_WARNING: true
 
-      - name: Wait for build to complete and download APK
+      - name: Download APK
         id: download
         run: |
-          # Get the latest build ID for this project
-          BUILD_ID=$(eas build:list --platform android --limit 1 \
-            --json --non-interactive 2>/dev/null | jq -r '.[0].id')
-          echo "Build ID: $BUILD_ID"
-
-          # Wait for build to complete (poll every 60 seconds)
-          # Timeout after 30 minutes to prevent infinite waiting
-          MAX_WAIT=1800
-          ELAPSED=0
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            RAW_OUTPUT=$(eas build:view "$BUILD_ID" --json \
-              --non-interactive 2>/dev/null)
-            STATUS=$(echo "$RAW_OUTPUT" | jq -r '.status')
-            echo "Build status: $STATUS"
-
-            if [ "$STATUS" = "FINISHED" ]; then
-              echo "Build completed successfully"
-              break
-            elif [ "$STATUS" = "ERRORED" ] || \
-                 [ "$STATUS" = "CANCELED" ]; then
-              echo "Build failed with status: $STATUS"
-              exit 1
-            fi
-
-            sleep 60
-            ELAPSED=$((ELAPSED + 60))
-          done
-
-          if [ $ELAPSED -ge $MAX_WAIT ]; then
-            echo "Build timed out after 30 minutes"
-            exit 1
-          fi
-
-          # Download the APK
-          APK_URL=$(eas build:view "$BUILD_ID" --json \
-            --non-interactive 2>/dev/null | jq -r '.artifacts.buildUrl')
+          APK_URL=$(eas build:list --platform android --limit 1 \
+            --json --non-interactive 2>/dev/null | jq -r '.[0].artifacts.buildUrl')
           echo "Downloading APK from: $APK_URL"
           wget -O blaze.apk "$APK_URL"
 
-          # Get version from tag
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
         env:
