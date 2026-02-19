@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,7 +30,9 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build Android APK
-        run: eas build --platform android --profile production --non-interactive --no-wait
+        run: |
+          eas build --platform android --profile production \
+            --non-interactive --no-wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -38,38 +40,42 @@ jobs:
         id: download
         run: |
           # Get the latest build ID for this project
-          BUILD_ID=$(eas build:list --platform android --limit 1 --json --non-interactive | jq -r '.[0].id')
+          BUILD_ID=$(eas build:list --platform android --limit 1 \
+            --json --non-interactive | jq -r '.[0].id')
           echo "Build ID: $BUILD_ID"
-          
-          # Wait for build to complete (poll every 60 seconds, max 30 minutes)
+
+          # Wait for build to complete (poll every 60 seconds)
           MAX_WAIT=1800
           ELAPSED=0
           while [ $ELAPSED -lt $MAX_WAIT ]; do
-            STATUS=$(eas build:view $BUILD_ID --json --non-interactive | jq -r '.status')
+            STATUS=$(eas build:view $BUILD_ID --json \
+              --non-interactive | jq -r '.status')
             echo "Build status: $STATUS"
-            
+
             if [ "$STATUS" = "FINISHED" ]; then
               echo "Build completed successfully"
               break
-            elif [ "$STATUS" = "ERRORED" ] || [ "$STATUS" = "CANCELED" ]; then
+            elif [ "$STATUS" = "ERRORED" ] || \
+                 [ "$STATUS" = "CANCELED" ]; then
               echo "Build failed with status: $STATUS"
               exit 1
             fi
-            
+
             sleep 60
             ELAPSED=$((ELAPSED + 60))
           done
-          
+
           if [ $ELAPSED -ge $MAX_WAIT ]; then
             echo "Build timed out after 30 minutes"
             exit 1
           fi
-          
+
           # Download the APK
-          APK_URL=$(eas build:view $BUILD_ID --json --non-interactive | jq -r '.artifacts.buildUrl')
+          APK_URL=$(eas build:view $BUILD_ID --json \
+            --non-interactive | jq -r '.artifacts.buildUrl')
           echo "Downloading APK from: $APK_URL"
           wget -O blaze.apk "$APK_URL"
-          
+
           # Get version from tag
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -83,16 +89,18 @@ jobs:
           name: Blaze v${{ steps.download.outputs.version }}
           body: |
             ## Blaze v${{ steps.download.outputs.version }}
-            
+
             ### What's New
-            - Android APK build for version ${{ steps.download.outputs.version }}
-            
+            - Android APK build for version \
+              ${{ steps.download.outputs.version }}
+
             ### Installation
             1. Download the `blaze.apk` file below
-            2. Enable "Install from Unknown Sources" on your Android device
+            2. Enable "Install from Unknown Sources" on your device
             3. Install the APK
-            
-            **Note:** This is a production build of the Blaze fitness companion app.
+
+            **Note:** This is a production build of the Blaze \
+            fitness companion app.
           draft: false
           prerelease: false
         env:
