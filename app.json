@@ -33,6 +33,13 @@
           "cameraPermission": "Blaze needs camera access to take progress photos.",
           "photosPermission": "Blaze needs photo library access to select progress photos."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#f15c22"
+        }
       ]
     ]
   }

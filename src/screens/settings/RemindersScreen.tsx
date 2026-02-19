@@ -4,6 +4,7 @@ import { useUserStore } from '../../store';
 import { Card } from '../../components/common';
 import { colors, spacing, typography } from '../../theme';
 import { ReminderType } from '../../types';
+import { syncReminders } from '../../services/notificationService';
 
 interface ReminderConfig {
   type: ReminderType;
@@ -49,7 +50,14 @@ export default function RemindersScreen() {
 
   const toggleReminder = (type: ReminderType) => {
     const current = getReminder(type);
-    updateReminder({ ...current, enabled: !current.enabled });
+    const updated = { ...current, enabled: !current.enabled };
+    updateReminder(updated);
+
+    // Rebuild notification schedule with the toggled value
+    const newReminders = reminders.map((r) =>
+      r.type === type ? updated : r
+    );
+    syncReminders(newReminders);
   };
 
   return (
