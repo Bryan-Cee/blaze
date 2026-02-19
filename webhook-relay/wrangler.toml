@@ -2,6 +2,9 @@ name = "eas-webhook-relay"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
+[observability]
+enabled = false
+
 # Secrets (set via `wrangler secret put`, never committed):
 # - WEBHOOK_SECRET: HMAC secret shared with EAS webhook
 # - GITHUB_TOKEN: Fine-grained PAT with Contents read/write on Bryan-Cee/blaze
