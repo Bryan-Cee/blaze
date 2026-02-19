@@ -45,6 +45,7 @@ jobs:
           echo "Build ID: $BUILD_ID"
 
           # Wait for build to complete (poll every 60 seconds)
+          # Timeout after 30 minutes to prevent infinite waiting
           MAX_WAIT=1800
           ELAPSED=0
           while [ $ELAPSED -lt $MAX_WAIT ]; do
@@ -91,16 +92,14 @@ jobs:
             ## Blaze v${{ steps.download.outputs.version }}
 
             ### What's New
-            - Android APK build for version \
-              ${{ steps.download.outputs.version }}
+            - Android APK build for version ${{ steps.download.outputs.version }}
 
             ### Installation
             1. Download the `blaze.apk` file below
             2. Enable "Install from Unknown Sources" on your device
             3. Install the APK
 
-            **Note:** This is a production build of the Blaze \
-            fitness companion app.
+            **Note:** This is a production build of the Blaze fitness companion app.
           draft: false
           prerelease: false
         env:
