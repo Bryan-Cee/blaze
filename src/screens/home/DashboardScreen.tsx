@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -6,15 +6,25 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { format, getDay } from 'date-fns';
-import { useUserStore, useHydrationStore, useWorkoutStore, useProgressStore } from '../../store';
-import { getWorkoutForDay } from '../../data';
-import { Card, Button, ProgressRing, MetricTile } from '../../components/common';
-import { colors, spacing, typography, borderRadius } from '../../theme';
-import { HomeStackParamList } from '../../types';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { format, getDay } from "date-fns";
+import {
+  useUserStore,
+  useHydrationStore,
+  useWorkoutStore,
+  useProgressStore,
+} from "../../store";
+import { getWorkoutForDay } from "../../data";
+import {
+  Card,
+  Button,
+  ProgressRing,
+  MetricTile,
+} from "../../components/common";
+import { colors, spacing, typography, borderRadius } from "../../theme";
+import { HomeStackParamList } from "../../types";
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList>;
 
@@ -30,18 +40,18 @@ export default function DashboardScreen() {
   const today = new Date();
   const dayOfWeek = getDay(today) === 0 ? 7 : getDay(today); // Convert Sunday from 0 to 7
   const todayWorkout = getWorkoutForDay(dayOfWeek);
-  const todayDate = format(today, 'yyyy-MM-dd');
+  const todayDate = format(today, "yyyy-MM-dd");
   const todayWorkoutLog = workoutLogs.find(
-    (log) => log.date === todayDate && log.sessionId === todayWorkout?.id
+    (log) => log.date === todayDate && log.sessionId === todayWorkout?.id,
   );
 
   const todayEntries = useMemo(
     () => hydrationEntries.filter((entry) => entry.date === todayDate),
-    [hydrationEntries, todayDate]
+    [hydrationEntries, todayDate],
   );
   const todayHydration = useMemo(
     () => todayEntries.reduce((sum, entry) => sum + entry.quantityMl, 0),
-    [todayEntries]
+    [todayEntries],
   );
   const latestWeight = useMemo(() => {
     if (weightLogs.length === 0) return null;
@@ -75,11 +85,13 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>Good {getTimeOfDay()}</Text>
-            <Text style={styles.date}>{format(today, 'EEEE, MMMM d')}</Text>
+            <Text style={styles.date}>{format(today, "EEEE, MMMM d")}</Text>
           </View>
           <View style={styles.streakBadge}>
             <Text style={styles.streakIcon}>🔥</Text>
-            <Text style={styles.streakText}>Week {getCurrentWeek(profile?.startDate)}</Text>
+            <Text style={styles.streakText}>
+              Week {getCurrentWeek(profile?.startDate)}
+            </Text>
           </View>
         </View>
 
@@ -94,8 +106,8 @@ export default function DashboardScreen() {
           <View style={styles.progressContent}>
             <ProgressRing
               progress={Math.min(weightGoalProgress, 1)}
-              size={100}
-              strokeWidth={8}
+              size={200}
+              strokeWidth={14}
               color={colors.primary}
               value={weightLost.toFixed(1)}
               unit="kg lost"
@@ -103,7 +115,7 @@ export default function DashboardScreen() {
             <View style={styles.progressStats}>
               <MetricTile
                 label="START"
-                value={profile?.startWeightKg.toFixed(1) || '-'}
+                value={profile?.startWeightKg.toFixed(1) || "-"}
                 unit="kg"
                 color={colors.textTertiary}
                 compact
@@ -117,7 +129,7 @@ export default function DashboardScreen() {
               />
               <MetricTile
                 label="GOAL"
-                value={profile?.goalWeightKg.toFixed(1) || '-'}
+                value={profile?.goalWeightKg.toFixed(1) || "-"}
                 unit="kg"
                 color={colors.success}
                 compact
@@ -131,7 +143,9 @@ export default function DashboardScreen() {
           <View style={styles.workoutHeader}>
             <View>
               <Text style={styles.cardTitle}>Today's Workout</Text>
-              <Text style={styles.workoutTitle}>{todayWorkout?.title || 'Rest Day'}</Text>
+              <Text style={styles.workoutTitle}>
+                {todayWorkout?.title || "Rest Day"}
+              </Text>
             </View>
             {todayWorkoutLog?.completed && (
               <View style={styles.completedBadge}>
@@ -139,31 +153,37 @@ export default function DashboardScreen() {
               </View>
             )}
           </View>
-          {todayWorkout && todayWorkout.type !== 'rest' && (
+          {todayWorkout && todayWorkout.type !== "rest" && (
             <>
               <View style={styles.workoutMeta}>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Duration</Text>
-                  <Text style={styles.metaValue}>{todayWorkout.duration} min</Text>
+                  <Text style={styles.metaValue}>
+                    {todayWorkout.duration} min
+                  </Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Type</Text>
                   <Text style={styles.metaValue}>
-                    {todayWorkout.type.charAt(0).toUpperCase() + todayWorkout.type.slice(1)}
+                    {todayWorkout.type.charAt(0).toUpperCase() +
+                      todayWorkout.type.slice(1)}
                   </Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>Exercises</Text>
                   <Text style={styles.metaValue}>
-                    {todayWorkout.mainLifts.length + todayWorkout.accessories.length}
+                    {todayWorkout.mainLifts.length +
+                      todayWorkout.accessories.length}
                   </Text>
                 </View>
               </View>
               <Button
-                title={todayWorkoutLog?.completed ? 'View Details' : 'Start Workout'}
-                variant={todayWorkoutLog?.completed ? 'outline' : 'primary'}
+                title={
+                  todayWorkoutLog?.completed ? "View Details" : "Start Workout"
+                }
+                variant={todayWorkoutLog?.completed ? "outline" : "primary"}
                 onPress={() =>
-                  navigation.navigate('WorkoutDetail', {
+                  navigation.navigate("WorkoutDetail", {
                     sessionId: todayWorkout.id,
                     date: todayDate,
                   })
@@ -172,7 +192,7 @@ export default function DashboardScreen() {
               />
             </>
           )}
-          {todayWorkout?.type === 'rest' && (
+          {todayWorkout?.type === "rest" && (
             <Text style={styles.restText}>{todayWorkout.finisher}</Text>
           )}
         </Card>
@@ -182,7 +202,8 @@ export default function DashboardScreen() {
           <View style={styles.hydrationHeader}>
             <Text style={styles.cardTitle}>Hydration</Text>
             <Text style={styles.cardSubtitle}>
-              {(todayHydration / 1000).toFixed(1)} / {(hydrationTarget / 1000).toFixed(1)} L
+              {(todayHydration / 1000).toFixed(1)} /{" "}
+              {(hydrationTarget / 1000).toFixed(1)} L
             </Text>
           </View>
           <View style={styles.hydrationBar}>
@@ -247,9 +268,9 @@ export default function DashboardScreen() {
 
 function getTimeOfDay(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'morning';
-  if (hour < 17) return 'afternoon';
-  return 'evening';
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  return "evening";
 }
 
 function getCurrentWeek(startDate?: string): number {
@@ -271,9 +292,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxl,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.lg,
   },
   greeting: {
@@ -285,8 +306,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.backgroundTertiary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -304,9 +325,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   cardTitle: {
@@ -318,21 +339,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   progressContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   progressStats: {
-    flex: 1,
-    marginLeft: spacing.md,
     gap: spacing.sm,
+    alignItems: "flex-end" as const,
   },
   workoutCard: {
     marginBottom: spacing.md,
   },
   workoutHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: spacing.md,
   },
   workoutTitle: {
@@ -351,8 +372,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   workoutMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingVertical: spacing.md,
     borderTopWidth: 1,
     borderBottomWidth: 1,
@@ -360,7 +381,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   metaItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   metaLabel: {
     ...typography.caption,
@@ -373,31 +394,31 @@ const styles = StyleSheet.create({
   restText: {
     ...typography.body,
     color: colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   hydrationCard: {
     marginBottom: spacing.md,
   },
   hydrationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   hydrationBar: {
     height: 12,
     backgroundColor: colors.backgroundTertiary,
     borderRadius: borderRadius.round,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: spacing.md,
   },
   hydrationFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: colors.water,
     borderRadius: borderRadius.round,
   },
   quickAddButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
   },
   quickAddButton: {
@@ -405,7 +426,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundTertiary,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   quickAddText: {
     ...typography.buttonSmall,
@@ -416,7 +437,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -425,7 +446,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   statsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
   },
   statTile: {
