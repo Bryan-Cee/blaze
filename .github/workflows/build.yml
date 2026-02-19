@@ -8,7 +8,7 @@ on:
 jobs:
   trigger-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -59,10 +59,30 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Trigger EAS Build (no wait)
+      - name: Run EAS Build
+        id: eas-build
         run: |
-          eas build --platform android --profile production \
-            --non-interactive --no-wait
+          BUILD_OUTPUT=$(eas build --platform android --profile production \
+            --non-interactive --json 2>/dev/null)
+          echo "$BUILD_OUTPUT"
+          BUILD_URL=$(echo "$BUILD_OUTPUT" | jq -r '.[0].artifacts.buildUrl')
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[0].id')
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_BUILD_NO_EXPO_GO_WARNING: true
+
+      - name: Dispatch release event
+        run: |
+          gh api repos/${{ github.repository }}/dispatches \
+            --method POST \
+            -f event_type="eas-build-complete" \
+            -f 'client_payload[buildId]=${{ steps.eas-build.outputs.build_id }}' \
+            -f 'client_payload[platform]=ANDROID' \
+            -f 'client_payload[status]=finished' \
+            -f 'client_payload[buildUrl]=${{ steps.eas-build.outputs.build_url }}' \
+            -f 'client_payload[appVersion]=${{ steps.version.outputs.version }}' \
+            -f 'client_payload[buildProfile]=production'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
