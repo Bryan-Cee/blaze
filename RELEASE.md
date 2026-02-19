@@ -4,21 +4,70 @@ This document explains how to use the automated release pipeline for the Blaze a
 
 ## Overview
 
-The release pipeline automatically builds an Android APK and creates a GitHub release when you push a version tag. The pipeline is configured to use EAS (Expo Application Services) for building the APK.
+The release pipeline uses a two-phase architecture to avoid tying up a GitHub Actions runner for 60+ minutes:
+
+1. **Build phase** (`build.yml`): A tag push triggers `eas build --no-wait`, which kicks off an EAS build and exits immediately (~2 min runner time).
+2. **Release phase** (`release.yml`): When EAS finishes building, it sends a webhook to a Cloudflare Worker, which verifies the signature and dispatches a `repository_dispatch` event to GitHub. This triggers the release workflow, which downloads the APK and creates a GitHub Release (~2 min runner time).
+
+```
+Tag push (v*) --> build.yml (eas build --no-wait, ~2 min)
+                       |
+                 EAS Build Service (10-60 min)
+                       |
+                 EAS Webhook POST
+                       |
+                 Cloudflare Worker (verify signature, filter, forward)
+                       |
+                 GitHub repository_dispatch
+                       |
+                 release.yml (download APK, create release, ~2 min)
+```
 
 ## Prerequisites
 
-Before you can use the release pipeline, you need to:
+Before you can use the release pipeline, you need:
 
-1. **Create an Expo account** at [expo.dev](https://expo.dev) if you don't have one
-2. **Generate an Expo access token**:
-   - Go to [expo.dev/accounts/[your-username]/settings/access-tokens](https://expo.dev/accounts)
-   - Create a new access token with appropriate permissions
-3. **Add the token to GitHub Secrets**:
-   - Go to your repository Settings > Secrets and variables > Actions
-   - Click "New repository secret"
-   - Name: `EXPO_TOKEN`
-   - Value: Your Expo access token
+1. **Expo account** at [expo.dev](https://expo.dev)
+2. **Expo access token** added as `EXPO_TOKEN` in GitHub Secrets
+3. **Cloudflare Worker deployed** (see [Initial Setup](#initial-setup) below)
+4. **EAS webhook registered** pointing to the worker URL
+
+## Initial Setup
+
+These steps are required once after merging the pipeline code:
+
+### 1. Generate a webhook secret
+
+```bash
+openssl rand -hex 32
+```
+
+Save this value — you'll use it for both the worker and EAS webhook.
+
+### 2. Create a GitHub Fine-Grained PAT
+
+- Go to GitHub Settings > Developer settings > Fine-grained tokens
+- Create a token scoped to `Bryan-Cee/blaze` with **Contents: Read and write** permission
+- This is required because the built-in `GITHUB_TOKEN` cannot trigger `repository_dispatch`
+
+### 3. Deploy the Cloudflare Worker
+
+```bash
+cd webhook-relay
+npm install
+npx wrangler login
+npx wrangler secret put WEBHOOK_SECRET   # paste the secret from step 1
+npx wrangler secret put GITHUB_TOKEN     # paste the PAT from step 2
+npx wrangler deploy
+```
+
+Note the worker URL from the deploy output (e.g., `https://eas-webhook-relay.<your-subdomain>.workers.dev`).
+
+### 4. Register the EAS webhook
+
+```bash
+eas webhook:create --event BUILD --url <worker-url> --secret <webhook-secret>
+```
 
 ## Creating a Release
 
@@ -32,7 +81,7 @@ To trigger a release build:
        "version": "1.0.1"
      }
    }
-   
+
    // package.json
    {
      "version": "1.0.1"
@@ -53,17 +102,18 @@ To trigger a release build:
    ```
 
 4. The pipeline will automatically:
-   - Build the Android APK using EAS Build
-   - Wait for the build to complete
-   - Create a GitHub release with the APK attached
-   - Name the release "Blaze v1.0.1"
+   - Trigger an EAS build via `build.yml` (~2 min)
+   - EAS builds the Android APK (10-60 min, no runner occupied)
+   - EAS webhook notifies the Cloudflare Worker
+   - Worker dispatches `repository_dispatch` to GitHub
+   - `release.yml` downloads the APK and creates a GitHub Release
 
-## Monitoring the Build
+## Monitoring
 
-1. Go to the **Actions** tab in your GitHub repository
-2. Click on the running workflow
-3. Monitor the build progress in real-time
-4. The build typically takes 10-20 minutes to complete
+- **Build trigger**: Check the Actions tab for the `Build` workflow
+- **EAS build progress**: Run `eas build:list` or check [expo.dev](https://expo.dev)
+- **Worker logs**: Run `cd webhook-relay && npx wrangler tail`
+- **Release creation**: Check the Actions tab for the `Release` workflow
 
 ## Build Profiles
 
@@ -75,17 +125,23 @@ The pipeline uses the `production` build profile defined in `eas.json`:
 
 ## Troubleshooting
 
-### Build fails with "Unauthorized"
+### Build trigger fails with "Unauthorized"
 - Verify that the `EXPO_TOKEN` secret is set correctly in GitHub
 - Check that the token has not expired
 
-### Build takes longer than 30 minutes
-- The pipeline has a 30-minute timeout for builds
-- If your build is timing out, you may need to optimize your build or increase the timeout in the workflow file
+### EAS build completes but no release is created
+- Check worker logs: `cd webhook-relay && npx wrangler tail`
+- Verify the webhook secret matches between EAS and the worker
+- Verify the GitHub PAT is valid and has Contents read/write permission
+- Check that the EAS webhook is registered: `eas webhook:list`
+
+### Release workflow runs but APK download fails
+- Check that `buildUrl` is present in the webhook payload
+- The EAS build may have failed — check `eas build:list`
 
 ### APK not appearing in release
-- Check the workflow logs for any download errors
-- Verify that the EAS build completed successfully
+- Check the `Release` workflow logs for download errors
+- Verify the tag exists: `git tag -l`
 
 ## Manual Build (Alternative)
 
@@ -107,7 +163,9 @@ eas build --platform android --profile production
 
 ## Configuration Files
 
-- `.github/workflows/release.yml` - GitHub Actions workflow
+- `.github/workflows/build.yml` - Build trigger workflow (tag push)
+- `.github/workflows/release.yml` - Release workflow (repository_dispatch)
+- `webhook-relay/` - Cloudflare Worker that relays EAS webhooks to GitHub
 - `eas.json` - EAS Build configuration
 - `app.json` - Expo app configuration (includes version and package name)
 - `package.json` - NPM package configuration (includes version)

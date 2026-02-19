@@ -1,73 +1,52 @@
-name: Release Pipeline
+name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  repository_dispatch:
+    types: [eas-build-complete]
 
 jobs:
-  build-and-release:
+  create-release:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 15
+    if: >-
+      github.event.client_payload.status == 'finished' &&
+      github.event.client_payload.platform == 'ANDROID'
     permissions:
-      contents: write  # Required to create releases and upload assets
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          fetch-depth: 0
+          fetch-tags: true
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Configure EAS project
-        run: eas init --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Build Android APK
+      - name: Get version from latest tag
+        id: version
         run: |
-          eas build --platform android --profile production \
-            --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EAS_BUILD_NO_EXPO_GO_WARNING: true
+          TAG=$(git describe --tags --abbrev=0)
+          VERSION=${TAG#v}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Resolved tag: $TAG, version: $VERSION"
 
       - name: Download APK
-        id: download
         run: |
-          APK_URL=$(eas build:list --platform android --limit 1 \
-            --json --non-interactive 2>/dev/null | jq -r '.[0].artifacts.buildUrl')
-          echo "Downloading APK from: $APK_URL"
-          wget -O blaze.apk "$APK_URL"
-
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          BUILD_URL="${{ github.event.client_payload.buildUrl }}"
+          echo "Downloading APK from: $BUILD_URL"
+          wget -O blaze.apk "$BUILD_URL"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
           files: blaze.apk
-          name: Blaze v${{ steps.download.outputs.version }}
+          name: Blaze v${{ steps.version.outputs.version }}
           body: |
-            ## Blaze v${{ steps.download.outputs.version }}
+            ## Blaze v${{ steps.version.outputs.version }}
 
             ### What's New
-            - Android APK build for version ${{ steps.download.outputs.version }}
+            - Android APK build for version ${{ steps.version.outputs.version }}
 
             ### Installation
             1. Download the `blaze.apk` file below
