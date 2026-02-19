@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { useProgressStore, useUserStore } from '../../store';
@@ -7,7 +7,11 @@ import { colors, spacing, typography, borderRadius } from '../../theme';
 
 export default function WeightHistoryScreen() {
   const profile = useUserStore((state) => state.profile);
-  const weightHistory = useProgressStore((state) => state.getWeightHistory());
+  const weightLogs = useProgressStore((state) => state.weightLogs);
+  const weightHistory = useMemo(
+    () => [...weightLogs].sort((a, b) => a.date.localeCompare(b.date)),
+    [weightLogs]
+  );
 
   const startWeight = profile?.startWeightKg || 0;
 

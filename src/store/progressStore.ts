@@ -1,14 +1,19 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { WeightLog, BodyMeasurement, BiofeedbackLog } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import { WeightLog, BodyMeasurement, BiofeedbackLog, ProgressPhoto } from '../types';
+import * as Crypto from 'expo-crypto';
 import { format, parseISO, differenceInWeeks } from 'date-fns';
 
 interface ProgressState {
   weightLogs: WeightLog[];
   measurements: BodyMeasurement[];
   biofeedbackLogs: BiofeedbackLog[];
+  progressPhotos: ProgressPhoto[];
+
+  // Photo actions
+  addProgressPhoto: (uri: string, note?: string, date?: string) => void;
+  deleteProgressPhoto: (id: string) => void;
 
   // Weight actions
   logWeight: (weightKg: number, date?: string) => void;
@@ -34,6 +39,22 @@ export const useProgressStore = create<ProgressState>()(
       weightLogs: [],
       measurements: [],
       biofeedbackLogs: [],
+      progressPhotos: [],
+
+      addProgressPhoto: (uri, note, date) => {
+        const photoDate = date || format(new Date(), 'yyyy-MM-dd');
+        set((state) => ({
+          progressPhotos: [
+            { id: Crypto.randomUUID(), date: photoDate, uri, note },
+            ...state.progressPhotos,
+          ],
+        }));
+      },
+
+      deleteProgressPhoto: (id) =>
+        set((state) => ({
+          progressPhotos: state.progressPhotos.filter((p) => p.id !== id),
+        })),
 
       logWeight: (weightKg, date) => {
         const logDate = date || format(new Date(), 'yyyy-MM-dd');
@@ -51,7 +72,7 @@ export const useProgressStore = create<ProgressState>()(
           set((state) => ({
             weightLogs: [
               ...state.weightLogs,
-              { id: uuidv4(), date: logDate, weightKg },
+              { id: Crypto.randomUUID(), date: logDate, weightKg },
             ].sort((a, b) => a.date.localeCompare(b.date)),
           }));
         }
@@ -89,7 +110,7 @@ export const useProgressStore = create<ProgressState>()(
         set((state) => ({
           measurements: [
             ...state.measurements,
-            { id: uuidv4(), ...measurement },
+            { id: Crypto.randomUUID(), ...measurement },
           ].sort((a, b) => a.date.localeCompare(b.date)),
         })),
 
@@ -116,7 +137,7 @@ export const useProgressStore = create<ProgressState>()(
           set((state) => ({
             biofeedbackLogs: [
               ...state.biofeedbackLogs,
-              { id: uuidv4(), ...log, date: logDate },
+              { id: Crypto.randomUUID(), ...log, date: logDate },
             ],
           }));
         }

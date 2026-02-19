@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, Share } from 'react-native';
 import { format } from 'date-fns';
 import { useUserStore, useProgressStore, useHydrationStore, useWorkoutStore } from '../../store';
@@ -9,8 +9,16 @@ export default function ExportDataScreen() {
   const [exporting, setExporting] = useState<string | null>(null);
 
   const profile = useUserStore((state) => state.profile);
-  const weightLogs = useProgressStore((state) => state.getWeightHistory());
-  const measurements = useProgressStore((state) => state.getMeasurementHistory());
+  const rawWeightLogs = useProgressStore((state) => state.weightLogs);
+  const rawMeasurements = useProgressStore((state) => state.measurements);
+  const weightLogs = useMemo(
+    () => [...rawWeightLogs].sort((a, b) => a.date.localeCompare(b.date)),
+    [rawWeightLogs]
+  );
+  const measurements = useMemo(
+    () => [...rawMeasurements].sort((a, b) => a.date.localeCompare(b.date)),
+    [rawMeasurements]
+  );
   const hydrationEntries = useHydrationStore((state) => state.entries);
   const workoutLogs = useWorkoutStore((state) => state.logs);
 

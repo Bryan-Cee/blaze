@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,11 @@ type NavigationProp = NativeStackNavigationProp<NutritionStackParamList>;
 export default function NutritionDashboardScreen() {
   const navigation = useNavigation<NavigationProp>();
   const profile = useUserStore((state) => state.profile);
-  const todayLog = useNutritionStore((state) => state.getTodayLog());
+  const nutritionLogs = useNutritionStore((state) => state.logs);
+  const todayLog = useMemo(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    return nutritionLogs.find((log) => log.date === today);
+  }, [nutritionLogs]);
   const logNutrition = useNutritionStore((state) => state.logNutrition);
   const updateNutritionLog = useNutritionStore((state) => state.updateNutritionLog);
   const mealPrepItems = useNutritionStore((state) => state.mealPrepItems);

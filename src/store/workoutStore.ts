@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WorkoutLog } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns';
 
 interface WorkoutState {
@@ -27,7 +27,7 @@ export const useWorkoutStore = create<WorkoutState>()(
           logs: [
             ...state.logs,
             {
-              id: uuidv4(),
+              id: Crypto.randomUUID(),
               ...log,
             },
           ],

@@ -90,6 +90,14 @@ export interface GroceryItem {
   checked: boolean;
 }
 
+// Progress Photo Types
+export interface ProgressPhoto {
+  id: string;
+  date: string; // ISO date
+  uri: string;
+  note?: string;
+}
+
 // Weight & Progress Types
 export interface WeightLog {
   id: string;
@@ -165,6 +173,8 @@ export type RootTabParamList = {
 export type HomeStackParamList = {
   Dashboard: undefined;
   WorkoutDetail: { sessionId: string; date: string };
+  WorkoutTimer: { sessionId: string };
+  IntervalTimer: { config: IntervalConfig };
 };
 
 export type TrainingStackParamList = {
@@ -184,6 +194,7 @@ export type ProgressStackParamList = {
   ProgressDashboard: undefined;
   WeightHistory: undefined;
   Measurements: undefined;
+  ProgressPhotos: undefined;
 };
 
 export type SettingsStackParamList = {
