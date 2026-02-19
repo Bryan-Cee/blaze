@@ -1,6 +1,12 @@
-# Blaze
+<p align="center">
+  <img src="assets/icon.png" alt="Blaze" width="120" height="120" />
+</p>
 
-An 8-week fat loss companion app built with React Native and Expo. Blaze helps you execute a structured nutrition, training, hydration, and recovery plan to lose 5kg in 8 weeks.
+<h1 align="center">Blaze</h1>
+
+<p align="center">
+  An 8-week fat loss companion app built with React Native and Expo. Blaze helps you execute a structured nutrition, training, hydration, and recovery plan to lose 5kg in 8 weeks.
+</p>
 
 ![React Native](https://img.shields.io/badge/React%20Native-0.81.5-blue)
 ![Expo](https://img.shields.io/badge/Expo-54-black)
