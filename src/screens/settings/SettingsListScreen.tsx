@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -219,7 +220,7 @@ export default function SettingsListScreen() {
       ))}
 
       {/* App Info */}
-      <Text style={styles.version}>Blaze v1.0.0</Text>
+      <Text style={styles.version}>Blaze v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
     </ScrollView>
   );
 }

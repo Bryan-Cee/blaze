@@ -1,7 +1,14 @@
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
 import { ReminderSetting } from '../types';
+
+const isExpoGo =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+// Lazy-load expo-notifications to avoid the module-level error in Expo Go
+const getNotifications = () =>
+  isExpoGo ? null : require('expo-notifications') as typeof import('expo-notifications');
 
 /**
  * Call once at app start. Sets the foreground notification handler
@@ -9,26 +16,25 @@ import { ReminderSetting } from '../types';
  * Silently no-ops in Expo Go where notifications aren't supported.
  */
 export function initializeNotifications() {
-  try {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
+  const Notifications = getNotifications();
+  if (!Notifications) return;
 
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('reminders', {
-        name: 'Reminders',
-        importance: Notifications.AndroidImportance.HIGH,
-        sound: 'default',
-      });
-    }
-  } catch {
-    // expo-notifications not available (e.g. Expo Go)
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('reminders', {
+      name: 'Reminders',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+    });
   }
 }
 
@@ -37,11 +43,10 @@ export function initializeNotifications() {
  * where push tokens aren't available.
  */
 export async function requestPermissions(): Promise<boolean> {
-  try {
-    if (!Device.isDevice) {
-      return false;
-    }
+  const Notifications = getNotifications();
+  if (!Notifications || !Device.isDevice) return false;
 
+  try {
     const { status: existing } = await Notifications.getPermissionsAsync();
     if (existing === 'granted') return true;
 
@@ -146,40 +151,39 @@ function triggersForType(type: ReminderSetting['type']): WeeklyTrigger[] {
  * Silently no-ops in Expo Go where notifications aren't supported.
  */
 export async function syncReminders(reminders: ReminderSetting[]) {
-  try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
+  const Notifications = getNotifications();
+  if (!Notifications) return;
 
-    const enabled = reminders.filter((r) => r.enabled);
+  await Notifications.cancelAllScheduledNotificationsAsync();
 
-    for (const reminder of enabled) {
-      const content = CONTENT[reminder.type];
-      const triggers = triggersForType(reminder.type);
+  const enabled = reminders.filter((r) => r.enabled);
 
-      for (const trigger of triggers) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: content.title,
-            body: content.body,
-            sound: 'default',
-          },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-            weekday: trigger.weekday,
-            hour: trigger.hour,
-            minute: trigger.minute,
-          },
-        });
-      }
+  for (const reminder of enabled) {
+    const content = CONTENT[reminder.type];
+    const triggers = triggersForType(reminder.type);
+
+    for (const trigger of triggers) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: content.title,
+          body: content.body,
+          sound: 'default',
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+          weekday: trigger.weekday,
+          hour: trigger.hour,
+          minute: trigger.minute,
+        },
+      });
     }
+  }
 
-    if (__DEV__) {
-      const scheduled =
-        await Notifications.getAllScheduledNotificationsAsync();
-      console.log(
-        `Notifications: synced ${scheduled.length} scheduled notifications`
-      );
-    }
-  } catch {
-    // expo-notifications not available (e.g. Expo Go)
+  if (__DEV__) {
+    const scheduled =
+      await Notifications.getAllScheduledNotificationsAsync();
+    console.log(
+      `Notifications: synced ${scheduled.length} scheduled notifications`
+    );
   }
 }
